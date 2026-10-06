@@ -4,7 +4,7 @@ import { use, useState } from "react";
 import { useRouter } from "next/navigation";
 import { PhotoPicker, Switch, TopBar } from "@/components/ui";
 import { RepeatPicker } from "@/components/RepeatPicker";
-import { REPEAT_OPTIONS } from "@/lib/logic";
+import { REPEAT_OPTIONS, intervalOf } from "@/lib/logic";
 import { useStore } from "@/lib/store";
 import type { Interval } from "@/lib/types";
 
@@ -21,8 +21,10 @@ export default function CloseOut({ params }: { params: Promise<{ id: string }> }
   const [notes, setNotes] = useState("");
   const [after, setAfter] = useState<File | null>(null);
   const [receipt, setReceipt] = useState<File | null>(null);
-  const [repeat, setRepeat] = useState(false);
-  const [interval, setInterval] = useState<Interval>(REPEAT_OPTIONS[1].interval);
+  // An item that already repeats keeps repeating at its interval unless switched off here.
+  const current = item ? intervalOf(item) : null;
+  const [repeat, setRepeat] = useState(current !== null);
+  const [interval, setInterval] = useState<Interval>(current ?? REPEAT_OPTIONS[1].interval);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
@@ -39,7 +41,7 @@ export default function CloseOut({ params }: { params: Promise<{ id: string }> }
         notes,
         afterPhoto: skipStep2 ? null : after,
         receiptPhoto: skipStep2 ? null : receipt,
-        repeat: !skipStep2 && repeat ? interval : null,
+        repeat: repeat ? interval : null, // Skip leaves the repeat setting as shown
       });
       router.replace("/");
     } catch (e) {
